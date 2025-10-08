@@ -1,127 +1,63 @@
 
+# **Project Tracking API**
 
-## Description
+## **Description**
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Este proyecto es una API para gestionar proyectos, participantes, roles, tareas y estados, desarrollada con **NestJS**, **TypeORM** y **PostgreSQL**.
+Permite la creación, lectura, actualización y eliminación (CRUD) de todas las entidades, cumpliendo reglas de negocio como:
 
-## Project setup
-
-```bash
-$ npm install
-```
-
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-
-## 🧭 1️⃣ Crear el proyecto NestJS desde Git Bash o VS Code
-
-Abre tu terminal (puede ser Git Bash o el terminal integrado de VS Code) y escribe:
-
-```bash
-# 📂 1. Moverte al escritorio
-cd ~/desktop
-
-# 🚀 2. Crear un nuevo proyecto NestJS
-npx @nestjs/cli new project-tracking-api
-
-# 👉 Cuando te pregunte el gestor de paquetes, elige: npm
-```
-
-Esto creará una carpeta llamada `project-tracking-api` con la estructura base de NestJS.
+1. Un proyecto solo puede tener como padre a un proyecto de tipo “macro”.
+2. Un participante no puede estar asignado dos veces al mismo proyecto con el mismo rol, pero puede tener varios roles en el mismo proyecto.
+3. El estado de una tarea solo puede ser “Pending”, “In Progress” o “Completed”.
+4. La fecha de finalización de un proyecto debe ser posterior a la fecha de inicio.
+5. Un proyecto no puede marcarse como “Completed” si aún existen tareas en estado distinto de “Completed”.
 
 ---
 
-## ⚙️ 2️⃣ Entrar al proyecto y ejecutar por primera vez
+## **Project setup**
+
+### 1️⃣ Clonar el repositorio e instalar dependencias
 
 ```bash
+git clone https://github.com/MarianaDeLaCruz06/project-tracking-api.git
 cd project-tracking-api
-npm run start:dev
+npm install
 ```
 
-> ✅ Si todo sale bien, verás en consola algo como:
->
-> ```
-> Nest application successfully started
-> ```
+### 2️⃣ Instalaciones adicionales necesarias
+
+```bash
+# TypeORM y PostgreSQL
+npm install @nestjs/typeorm typeorm pg
+
+# Configuración de variables de entorno
+npm install @nestjs/config
+
+# Validación de DTOs
+npm install class-validator class-transformer
+```
 
 ---
 
-## 🧩 3️⃣ Instalar TypeORM + PostgreSQL + dotenv
+## **Database setup**
 
-Ejecuta:
-
-```bash
-npm install @nestjs/typeorm typeorm pg @nestjs/config
-```
-
-Esto instala:
-
-* `typeorm` → ORM principal
-* `pg` → driver de PostgreSQL
-* `@nestjs/config` → para variables de entorno (`.env`)
-
----
-
-## 🗄️ 4️⃣ Crear la base de datos en PostgreSQL
-
-Abre Git Bash y ejecuta `psql`:
-
-```bash
-psql -U postgres
-```
-
-(si te pide contraseña, pon la que configuraste al instalar PostgreSQL).
-
-Luego crea la base de datos:
+1. Crear la base de datos en PostgreSQL:
 
 ```sql
 CREATE DATABASE project_tracking;
-\q
 ```
 
----
-
-## 🔑 5️⃣ Crear archivo `.env` en la raíz del proyecto
-
-Crea un archivo llamado `.env` en la raíz del proyecto (`project-tracking-api/.env`) con el siguiente contenido:
+2. Crear archivo `.env` en la raíz del proyecto:
 
 ```env
 DB_HOST=localhost
 DB_PORT=5432
 DB_USERNAME=postgres
-DB_PASSWORD=tu_contraseña_aquí
+DB_PASSWORD=tu_contraseña(mari1234)
 DB_NAME=project_tracking
 ```
 
----
-
-## 🧠 6️⃣ Configurar conexión en `app.module.ts`
-
-Abre el archivo `src/app.module.ts` y reemplázalo por esto:
+3. Configurar la conexión en `src/app.module.ts`:
 
 ```ts
 import { Module } from '@nestjs/common';
@@ -130,7 +66,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-// Importaremos los módulos más adelante
 import { ProjectsModule } from './projects/projects.module';
 import { ParticipantsModule } from './participants/participants.module';
 import { RolesModule } from './roles/roles.module';
@@ -140,10 +75,7 @@ import { StatusModule } from './status/status.module';
 
 @Module({
   imports: [
-    // 🌱 Cargar variables .env
     ConfigModule.forRoot({ isGlobal: true }),
-
-    // 🧩 Conexión con PostgreSQL
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -151,11 +83,9 @@ import { StatusModule } from './status/status.module';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      autoLoadEntities: true, // Carga automática de entidades
-      synchronize: true,      // ⚠️ Solo usar en desarrollo
+      autoLoadEntities: true,
+      synchronize: true, // ⚠️ Solo usar en desarrollo
     }),
-
-    // Aquí irán tus módulos
     ProjectsModule,
     ParticipantsModule,
     RolesModule,
@@ -171,12 +101,27 @@ export class AppModule {}
 
 ---
 
-## 🧱 7️⃣ Crear módulos y entidades
+## **Modules & Entities**
 
-Ahora, crea los módulos y entidades base (solo estructura al inicio):
+El proyecto contiene los siguientes módulos y entidades:
+
+| Módulo                 | Entidad              | Descripción                                     |
+| ---------------------- | -------------------- | ----------------------------------------------- |
+| `projects`             | `Project`            | Gestiona los proyectos y su jerarquía           |
+| `participants`         | `Participant`        | Gestiona los participantes                      |
+| `roles`                | `Role`               | Roles de los participantes en los proyectos     |
+| `tasks`                | `Task`               | Tareas asociadas a proyectos                    |
+| `project-participants` | `ProjectParticipant` | Relación entre proyectos, participantes y roles |
+| `status`               | `Status`             | Estados que pueden tener proyectos y tareas     |
+
+---
+
+## **Creating modules, services, and controllers**
+
+Ejemplo de creación para todos los módulos:
 
 ```bash
-# Módulos principales
+# Crear módulos
 nest g module projects
 nest g module participants
 nest g module roles
@@ -184,7 +129,7 @@ nest g module tasks
 nest g module project-participants
 nest g module status
 
-# Servicios y controladores
+# Crear servicios y controladores (sin archivos .spec)
 nest g service projects --no-spec
 nest g controller projects --no-spec
 
@@ -206,15 +151,15 @@ nest g controller status --no-spec
 
 ---
 
-## 🧩 8️⃣ Crear entidades (por ejemplo `Project`)
+## **Entities examples**
 
-Dentro de `src/projects/entities/project.entity.ts`:
+### **Project Entity**
 
 ```ts
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
-import { TaskTracking } from '../../tasks/entities/task-tracking.entity';
+import { Task } from '../../tasks/entities/task.entity';
 
-@Entity({ name: 'projects' })
+@Entity()
 export class Project {
   @PrimaryGeneratedColumn()
   id: number;
@@ -226,62 +171,110 @@ export class Project {
   description?: string;
 
   @Column({ type: 'date' })
-  start_date: string;
+  startDate: string;
 
   @Column({ type: 'date' })
-  end_date: string;
+  endDate: string;
 
-  @Column()
-  type: string;
+  @Column({ type: 'varchar', default: 'normal' })
+  type: string; // macro o sub
 
-  @Column({ nullable: true })
-  status_id?: number;
+  @Column({ type: 'varchar', default: 'Pending' })
+  status: string;
 
-  @Column({ nullable: true })
-  parent_id?: number;
+  @ManyToOne(() => Project, (project) => project.children, { nullable: true })
+  parent?: Project;
 
-  @OneToMany(() => TaskTracking, (task) => task.project)
-  tasks: TaskTracking[];
+  @OneToMany(() => Project, (project) => project.parent)
+  children: Project[];
+
+  @OneToMany(() => Task, (task) => task.project)
+  tasks: Task[];
 }
 ```
 
-👉 Luego harás lo mismo para las otras entidades (`participants`, `roles`, `task_tracking`, `status`, `project_participants`).
+### **Task Entity**
+
+```ts
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Project } from '../../projects/entities/project.entity';
+
+@Entity()
+export class Task {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  name: string;
+
+  @Column({ type: 'text', nullable: true })
+  description?: string;
+
+  @Column({ type: 'varchar', default: 'Pending' })
+  status: string;
+
+  @Column({ type: 'date' })
+  startDate: string;
+
+  @Column({ type: 'date', nullable: true })
+  endDate?: string;
+
+  @ManyToOne(() => Project, (project) => project.tasks, { onDelete: 'CASCADE' })
+  project: Project;
+}
+```
 
 ---
 
-## ⚙️ 9️⃣ Probar la conexión
-
-Ejecuta el proyecto:
+## **Run the project**
 
 ```bash
+# Development
+npm run start
+
+# Watch mode
 npm run start:dev
+
+# Production
+npm run start:prod
 ```
 
-En consola deberías ver algo así:
-
-```
-[Nest] 4564   - Started Nest application
-Query: CREATE TABLE "projects" ...
-```
-
-Esto significa que TypeORM se conectó correctamente y generó las tablas en tu base de datos PostgreSQL 🥳
+* Verifica que TypeORM genere las tablas en PostgreSQL.
+* Puedes entrar a `psql` y usar `\dt` para ver las tablas creadas.
 
 ---
 
-## ✅ 10️⃣ Verificar en PostgreSQL
-
-Vuelve a entrar a `psql`:
+## **Testing**
 
 ```bash
-psql -U postgres -d project_tracking
+# Unit tests
+npm run test
+
+# E2E tests
+npm run test:e2e
+
+# Test coverage
+npm run test:cov
 ```
 
-y ejecuta:
+---
 
-```sql
-\dt
-```
+## **API Endpoints básicos**
 
-Deberías ver las tablas creadas por TypeORM (como `projects`).
+| Módulo       | Método | Endpoint      | Descripción                |
+| ------------ | ------ | ------------- | -------------------------- |
+| Projects     | GET    | /projects     | Listar todos los proyectos |
+| Projects     | POST   | /projects     | Crear proyecto             |
+| Tasks        | GET    | /tasks        | Listar tareas              |
+| Tasks        | POST   | /tasks        | Crear tarea                |
+| Participants | GET    | /participants | Listar participantes       |
+| Roles        | GET    | /roles        | Listar roles               |
+| Status       | GET    | /status       | Listar estados             |
 
+> Para los endpoints CRUD completos de cada módulo, se siguen las mismas convenciones.
 
+---
+
+Si quieres, puedo hacer una **versión aún más detallada**, con **ejemplos JSON para cada endpoint** para que cualquiera pueda probar tu API directamente con Postman.
+
+¿Quieres que haga eso también?
