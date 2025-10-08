@@ -275,8 +275,76 @@ npm run test:cov
 
 > Para los endpoints CRUD completos de cada módulo, se siguen las mismas convenciones.
 
+
 ---
 
-Si quieres, puedo hacer una **versión aún más detallada**, con **ejemplos JSON para cada endpoint** para que cualquiera pueda probar tu API directamente con Postman.
+## **🔍 Acceder y revisar la base de datos**
 
-¿Quieres que haga eso también?
+### 1️⃣ Entrar a PostgreSQL
+
+Abre tu terminal (Git Bash, CMD o PowerShell) y escribe:
+
+```bash
+psql -U postgres
+```
+
+* `-U postgres` indica que te conectas con el usuario `postgres`.
+* Si tu usuario o contraseña son distintos, reemplaza según corresponda.
+* PostgreSQL pedirá tu contraseña.
+
+---
+
+### 2️⃣ Conectarse a la base de datos del proyecto
+
+```sql
+\c project_tracking
+```
+
+* `project_tracking` es el nombre de la base de datos que creaste.
+
+---
+
+### 3️⃣ Listar las tablas creadas por TypeORM
+
+```sql
+\dt
+```
+
+Esto mostrará todas las tablas como:
+
+```
+public | projects
+public | participants
+public | roles
+public | tasks
+public | project_participants
+public | status
+```
+
+---
+
+### 4️⃣ Ver el contenido de una tabla
+
+Por ejemplo, para ver los proyectos creados:
+
+```sql
+SELECT * FROM projects;
+```
+
+Para las tareas:
+
+```sql
+SELECT * FROM tasks;
+```
+
+---
+
+### 5️⃣ Salir de PostgreSQL
+
+```sql
+\q
+```
+
+
+
+
