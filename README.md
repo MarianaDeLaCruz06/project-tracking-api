@@ -12,6 +12,8 @@ Permite la creación, lectura, actualización y eliminación (CRUD) de todas las
 4. La fecha de finalización de un proyecto debe ser posterior a la fecha de inicio.
 5. Un proyecto no puede marcarse como “Completed” si aún existen tareas en estado distinto de “Completed”.
 
+### Repo profe (*https://github.com/leobusar/icesi-2025b-nestjs*)
+
 ---
 
 ## **Project setup**
